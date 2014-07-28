@@ -1,7 +1,5 @@
 package cl.cc.main;
 
-import java.io.File;
-import java.net.URL;
 import org.bytedeco.javacpp.Loader;
 import static org.bytedeco.javacpp.helper.opencv_objdetect.cvHaarDetectObjects;
 import static org.bytedeco.javacpp.opencv_core.CV_AA;
@@ -28,24 +26,15 @@ import org.bytedeco.javacv.FrameGrabber;
 
 /**
  *
- * @author bytedeco
- * Code obtain from here: https://github.com/bytedeco/javacv
+ * @author bytedeco Code obtain from here: https://github.com/bytedeco/javacv
  * NOTA: Se ha copiado sólo el código necesario para el detector de rostros
  */
 public class Run {
 
     public static void main(String[] args) throws Exception {
-        
-        String classifierName;
-        if (args.length > 0) {
-            classifierName = args[0];
-        } else {
-            URL url = new URL("https://raw.github.com/Itseez/opencv/2.4/data/haarcascades/haarcascade_frontalface_alt.xml");
-            File file = Loader.extractResource(url, null, "classifier", ".xml");
-            file.deleteOnExit();
-            classifierName = file.getAbsolutePath();
-        }
 
+        String classifierName = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml";
+        
         // Preload the opencv_objdetect module to work around a known bug.
         Loader.load(opencv_objdetect.class);
 
@@ -60,6 +49,10 @@ public class Run {
         // DC1394FrameGrabber, FlyCaptureFrameGrabber, OpenKinectFrameGrabber,
         // PS3EyeFrameGrabber, VideoInputFrameGrabber, and FFmpegFrameGrabber.
         FrameGrabber grabber = FrameGrabber.createDefault(0);
+
+        grabber.setImageHeight(480);
+        grabber.setImageWidth(720);
+
         grabber.start();
 
         // FAQ about IplImage:
