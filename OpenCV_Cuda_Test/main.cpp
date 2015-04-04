@@ -6,6 +6,9 @@ int main (int argc, char* argv[])
 {
     try
     {
+        
+        std::cout << "Devices with CUDA Support: " << cv::gpu::getCudaEnabledDeviceCount();
+        
         cv::Mat src_host = cv::imread("/Users/CyberCastle/CyberCastle-Logo.png", CV_LOAD_IMAGE_GRAYSCALE);
         cv::gpu::GpuMat dst, src;
         src.upload(src_host);

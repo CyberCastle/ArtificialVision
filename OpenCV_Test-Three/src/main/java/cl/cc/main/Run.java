@@ -1,6 +1,7 @@
 package cl.cc.main;
 
 import org.bytedeco.javacpp.Loader;
+import org.bytedeco.javacpp.flandmark;
 import org.bytedeco.javacpp.opencv_core;
 import static org.bytedeco.javacpp.opencv_core.CV_8UC1;
 import org.bytedeco.javacpp.opencv_core.IplImage;
@@ -8,10 +9,15 @@ import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Rect;
 import org.bytedeco.javacpp.opencv_core.Size;
+import static org.bytedeco.javacpp.opencv_core.cvLoad;
 import static org.bytedeco.javacpp.opencv_core.cvRound;
 import static org.bytedeco.javacpp.opencv_core.rectangle;
+import org.bytedeco.javacpp.opencv_highgui;
+import org.bytedeco.javacpp.opencv_imgproc;
 import static org.bytedeco.javacpp.opencv_imgproc.CV_BGR2GRAY;
 import static org.bytedeco.javacpp.opencv_imgproc.INTER_LINEAR;
+import static org.bytedeco.javacpp.opencv_imgproc.blur;
+import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_imgproc.equalizeHist;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
@@ -20,17 +26,22 @@ import static org.bytedeco.javacpp.opencv_objdetect.CV_HAAR_DO_ROUGH_SEARCH;
 import static org.bytedeco.javacpp.opencv_objdetect.CV_HAAR_FIND_BIGGEST_OBJECT;
 import static org.bytedeco.javacpp.opencv_objdetect.CV_HAAR_SCALE_IMAGE;
 import org.bytedeco.javacpp.opencv_objdetect.CascadeClassifier;
+import org.bytedeco.javacpp.opencv_objdetect.CvHaarClassifierCascade;
 import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.FrameGrabber;
 
 /**
  *
  * @author CyberCastle
- * 
+ *
  */
 public class Run {
 
     public static void main(String[] args) throws Exception {
+
+        //System.setProperty("java.library.path", "/usr/local/lib/");
+
+        //System.out.println(System.getProperty("java.library.path"));
 
         String faceClassifierPath = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml";
         String leftEyeClassifierPath = "/usr/local/share/OpenCV/haarcascades/haarcascade_mcs_lefteye.xml";
@@ -39,9 +50,13 @@ public class Run {
         String mouthEyeClassifierPath = "/usr/local/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml";
 
         // Preload the opencv_objdetect module to work around a known bug.
-        Loader.load(opencv_objdetect.class);
+        //Loader.load();
 
         CascadeClassifier faceClassifier = new CascadeClassifier(faceClassifierPath);
+        
+        
+
+        
 
         // Establecemos el origen del stream a procesar
         FrameGrabber grabber = FrameGrabber.createDefault(0);
@@ -61,11 +76,14 @@ public class Run {
             Mat img = new Mat(grabbedImage, true);
             Mat gray = new Mat();
             Mat smallImg = new Mat((img.rows() / 2), cvRound(img.cols() / 2), CV_8UC1);
+
+            // Revisar aquí el tema de la luminosidad.
             cvtColor(img, gray, CV_BGR2GRAY);
             resize(gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR);
-            equalizeHist( smallImg, smallImg );
+
+            equalizeHist(smallImg, smallImg);
             Rect faces = new opencv_core.Rect();
-            faceClassifier.detectMultiScale(smallImg, faces, 1.1, 1, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH | CV_HAAR_SCALE_IMAGE, new Size(0, 0), new Size(250, 250));
+            faceClassifier.detectMultiScale(smallImg, faces, 1.1, 1, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH | CV_HAAR_SCALE_IMAGE, new Size(150, 150), new Size(200, 200));
 
             Point center = new Point();
             center.x(cvRound(faces.x() + faces.width() * 0.5));
@@ -78,17 +96,38 @@ public class Run {
             Rect roi = new Rect(x1.x(), x1.y(), (x2.x() - x1.x()), (x2.y() - x1.y()));
 
             //smallImg.apply(myROI);
+            
+            
+            
+            
             //circle(smallImg, center, radius, new opencv_core.Scalar(0, 255, 0, 255), 2, 8, 0);
             rectangle(smallImg, x1, x2, new opencv_core.Scalar(255, 255, 0, 255), 2, 8, 0);
 
-            if ((0 <= roi.x() && 0 <= roi.width() && roi.x() + roi.width() <= 0 && 0 <= roi.y() && 0 <= roi.height() && roi.y() + roi.height() <= 0)) {
-                smallImg = smallImg.apply(roi);
-            }
-            frame.showImage(smallImg);
+//            if ((0 <= roi.x() && 0 <= roi.width() && roi.x() + roi.width() <= 0 && 0 <= roi.y() && 0 <= roi.height() && roi.y() + roi.height() <= 0)) {
+//                smallImg = smallImg.apply(roi);
+//            }
+            Mat canny = new Mat();
+            blur(smallImg, canny, new Size(10, 10)); // Reducción de ruido
+            opencv_imgproc.Canny(canny, canny, 10, 10, 3, true);
+
+            IplImage saveImage = new IplImage(grabbedImage);
+
+            opencv_highgui.cvSaveImage("/Users/CyberCastle/tmp/imagen.png", saveImage);
+
+            frame.showImage(canny);
         }
-        
+
         frame.dispose();
         grabber.stop();
     }
     
+    public static void main3 (String ... arg) {
+        
+        
+        
+    //flandmark.
+    }
+
 }
+
+//http://ganeshtiwaridotcomdotnp.blogspot.com/2011/12/javacv-image-load-smooth-and-save.html
